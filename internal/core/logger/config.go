@@ -1,4 +1,4 @@
-package logger
+package core_logger
 
 import (
 	"fmt"

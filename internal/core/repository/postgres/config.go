@@ -1,4 +1,4 @@
-package repo_postgres
+package core_repo_postgres
 
 import (
 	"fmt"

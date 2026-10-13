@@ -1,3 +1,6 @@
+include .env
+export
+
 build:
 	go build -o bin/ cmd/deploy-platform/main.go
 
