@@ -48,7 +48,7 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/your-org/your-project
+        - github.com/Eternity8c/deploy-platform
 
 issues:
   max-issues-per-linter: 0
