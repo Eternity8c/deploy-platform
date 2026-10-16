@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -42,8 +43,9 @@ func (s *Server) Run(ctx context.Context) error {
 	mux := core_transport_middleware.ChainMiddleware(s.mux, s.middleware...)
 
 	server := &http.Server{
-		Addr:    s.config.Addr,
-		Handler: mux,
+		ReadHeaderTimeout: 5 * time.Second,
+		Addr:              s.config.Addr,
+		Handler:           mux,
 	}
 
 	ch := make(chan error, 1)
@@ -62,7 +64,7 @@ func (s *Server) Run(ctx context.Context) error {
 	select {
 	case err := <-ch:
 		if err != nil {
-			return fmt.Errorf("Listen and serve: %w", err)
+			return fmt.Errorf("listen and serve: %w", err)
 		}
 	case <-ctx.Done():
 		s.log.Warn("shutdown server...")

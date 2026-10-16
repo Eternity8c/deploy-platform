@@ -10,7 +10,12 @@ import (
 	core_transport_response "github.com/Eternity8c/deploy-platform/internal/core/transport/response"
 )
 
-const requestIDHeader = "X-Request-ID"
+type contextKey string
+
+const (
+	requestIDHeader            = "X-Request-ID"
+	logKey          contextKey = "log"
+)
 
 func Logger(log *core_logger.Logger) Middleware {
 	return func(next http.Handler) http.Handler {
@@ -22,7 +27,7 @@ func Logger(log *core_logger.Logger) Middleware {
 				zap.String("url", r.URL.String()),
 			)
 
-			ctx := context.WithValue(r.Context(), "log", l)
+			ctx := context.WithValue(r.Context(), logKey, l)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

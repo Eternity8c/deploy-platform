@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
 	core_repo_postgres "github.com/Eternity8c/deploy-platform/internal/core/repository/postgres"
 	core_transport_response "github.com/Eternity8c/deploy-platform/internal/core/transport/response"
-	"go.uber.org/zap"
 )
 
 func Healthz(w http.ResponseWriter, r *http.Request) {

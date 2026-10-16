@@ -8,12 +8,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
 	core_repo_postgres "github.com/Eternity8c/deploy-platform/internal/core/repository/postgres"
 	core_server "github.com/Eternity8c/deploy-platform/internal/core/server"
 	core_transport_middleware "github.com/Eternity8c/deploy-platform/internal/core/transport/middleware"
 	features_handler "github.com/Eternity8c/deploy-platform/internal/features/handler"
-	"go.uber.org/zap"
 )
 
 func main() {
