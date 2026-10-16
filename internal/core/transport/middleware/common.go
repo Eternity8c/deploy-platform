@@ -1,7 +1,6 @@
 package core_transport_middleware
 
 import (
-	"context"
 	"net/http"
 
 	"go.uber.org/zap"
@@ -10,11 +9,8 @@ import (
 	core_transport_response "github.com/Eternity8c/deploy-platform/internal/core/transport/response"
 )
 
-type contextKey string
-
 const (
-	requestIDHeader            = "X-Request-ID"
-	logKey          contextKey = "log"
+	requestIDHeader = "X-Request-ID"
 )
 
 func Logger(log *core_logger.Logger) Middleware {
@@ -27,7 +23,7 @@ func Logger(log *core_logger.Logger) Middleware {
 				zap.String("url", r.URL.String()),
 			)
 
-			ctx := context.WithValue(r.Context(), logKey, l)
+			ctx := core_logger.WithLogger(r.Context(), l)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

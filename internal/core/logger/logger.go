@@ -11,6 +11,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type contextKey string
+
+const logKey contextKey = "log"
+
 type Logger struct {
 	*zap.Logger
 
@@ -33,7 +37,7 @@ func NewLogger(config Config) (*Logger, error) {
 		fmt.Sprintf("%s.log", timestamp),
 	)
 
-	//nolint:gosec
+	//nolint:gosec // путь собирается из config.Folder, значение приходит только из env
 	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY, 0640)
 	if err != nil {
 		return nil, fmt.Errorf("open log file: %w", err)
@@ -69,8 +73,12 @@ func (l *Logger) Close() {
 	}
 }
 
+func WithLogger(ctx context.Context, l *Logger) context.Context {
+	return context.WithValue(ctx, logKey, l)
+}
+
 func FromContext(ctx context.Context) *Logger {
-	log, ok := ctx.Value("log").(*Logger)
+	log, ok := ctx.Value(logKey).(*Logger)
 	if !ok {
 		panic("no logger in context")
 	}

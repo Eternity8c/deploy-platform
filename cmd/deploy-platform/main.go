@@ -10,6 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
 	core_repo_postgres "github.com/Eternity8c/deploy-platform/internal/core/repository/postgres"
 	core_server "github.com/Eternity8c/deploy-platform/internal/core/server"
@@ -59,6 +61,11 @@ func main() {
 			Method:  http.MethodGet,
 			Path:    "/readyz",
 			Handler: features_handler.Readyz(pool),
+		},
+		core_server.Route{
+			Method:  http.MethodGet,
+			Path:    "/metrics",
+			Handler: promhttp.Handler().ServeHTTP,
 		},
 	)
 
