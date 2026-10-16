@@ -1,6 +1,6 @@
-package core_transport_responce
+package core_transport_response
 
-type ErorrReponce struct {
+type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message"`
 }

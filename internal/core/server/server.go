@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
 	core_transport_middleware "github.com/Eternity8c/deploy-platform/internal/core/transport/middleware"
-	"go.uber.org/zap"
 )
 
 type Server struct {

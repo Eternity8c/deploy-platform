@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
-	core_transport_responce "github.com/Eternity8c/deploy-platform/internal/core/transport/responce"
 	"go.uber.org/zap"
+
+	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
+	core_transport_response "github.com/Eternity8c/deploy-platform/internal/core/transport/response"
 )
 
 const requestIDHeader = "X-Request-ID"
@@ -33,11 +34,11 @@ func Panic() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := core_logger.FromContext(ctx)
-			responceHandler := core_transport_responce.NewHTTPResponceHandler(log, w)
+			responseHandler := core_transport_response.NewHTTPResponseHandler(log, w)
 
 			defer func() {
 				if p := recover(); p != nil {
-					responceHandler.PanicResponce(
+					responseHandler.PanicResponse(
 						p,
 						"during handle HTTP request got unexpcted panic",
 					)
