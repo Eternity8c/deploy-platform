@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE applications (
-      id         bigserial PRIMARY KEY,
+  id         bigserial PRIMARY KEY,
   tenant     text        NOT NULL DEFAULT 'shop',
   name       text        NOT NULL,
   spec       jsonb       NOT NULL,   -- весь spec как есть
