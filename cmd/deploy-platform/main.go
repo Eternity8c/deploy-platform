@@ -16,6 +16,7 @@ import (
 	core_repo_postgres "github.com/Eternity8c/deploy-platform/internal/core/repository/postgres"
 	core_server "github.com/Eternity8c/deploy-platform/internal/core/server"
 	core_transport_middleware "github.com/Eternity8c/deploy-platform/internal/core/transport/middleware"
+	features_application "github.com/Eternity8c/deploy-platform/internal/features/application"
 	features_handler "github.com/Eternity8c/deploy-platform/internal/features/handler"
 )
 
@@ -38,6 +39,7 @@ func main() {
 	server := core_server.NewServer(
 		configServer,
 		logger,
+		core_transport_middleware.RequestID(),
 		core_transport_middleware.Logger(logger),
 		core_transport_middleware.Panic(),
 	)
@@ -50,26 +52,34 @@ func main() {
 	}
 	defer pool.Close()
 
+	store := features_application.NewStore(pool)
+	applicationHandler := features_handler.NewApplicationHandler(store)
+
 	router := core_server.NewRouter()
 	router.RegisterRoutes(
 		core_server.Route{
 			Method:  http.MethodGet,
 			Path:    "/healthz",
-			Handler: features_handler.Healthz,
+			Handler: applicationHandler.Healthz,
 		},
 		core_server.Route{
 			Method:  http.MethodGet,
 			Path:    "/readyz",
-			Handler: features_handler.Readyz(pool),
+			Handler: applicationHandler.Readyz(pool),
 		},
 		core_server.Route{
 			Method:  http.MethodGet,
 			Path:    "/metrics",
 			Handler: promhttp.Handler().ServeHTTP,
 		},
+		core_server.Route{
+			Method:  http.MethodPost,
+			Path:    "/applications",
+			Handler: applicationHandler.CreateApplication,
+		},
 	)
 
-	server.RegisterRoutes(router)
+	server.RegisterRoutes("v1", router)
 
 	if err := server.Run(ctx); err != nil {
 		logger.Error("run server: ", zap.Error(err))

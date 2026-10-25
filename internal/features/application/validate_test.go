@@ -2,6 +2,7 @@ package features_application
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -91,12 +92,12 @@ func TestValidate(t *testing.T) {
 				return
 			}
 
-			var ve ValidationError
-			if !errors.As(err, &ve) {
-				t.Fatalf("ожидался ValidationError, получено %T: %v", err, err)
+			var ves ValidationErrors
+			if !errors.As(err, &ves) {
+				t.Fatalf("ожидался ValidationErrors, получено %T: %v", err, err)
 			}
-			if ve.Field != tt.wantField {
-				t.Fatalf("поле %q, ожидалось %q (сообщение: %s)", ve.Field, tt.wantField, ve.Message)
+			if !hasField(ves, tt.wantField) {
+				t.Fatalf("нет ошибки по полю %q, получено: %v", tt.wantField, ves)
 			}
 		})
 	}
@@ -143,11 +144,44 @@ func TestValidateErrorAsValidationError(t *testing.T) {
 		t.Fatal("ожидалась ошибка на пустом манифесте")
 	}
 
-	var ve ValidationError
-	if !errors.As(err, &ve) {
-		t.Fatalf("ожидался ValidationError, получено %T", err)
+	var ves ValidationErrors
+	if !errors.As(err, &ves) {
+		t.Fatalf("ожидался ValidationErrors, получено %T", err)
 	}
-	if ve.Field != "apiVersion" {
-		t.Fatalf("поле %q, ожидалось apiVersion", ve.Field)
+	if len(ves) == 0 || ves[0].Field != "apiVersion" {
+		t.Fatalf("первое поле %v, ожидалось apiVersion", ves)
+	}
+}
+
+// hasField — тест спрашивает «есть ли претензия к этому полю»,
+// а не «какая она по счёту»: порядок проверок не должен быть контрактом.
+func hasField(ves ValidationErrors, field string) bool {
+	return slices.ContainsFunc(ves, func(v ValidationError) bool { return v.Field == field })
+}
+
+// TestValidateCollectsAll кодирует D4: сломанных полей три — клиент должен
+// получить три претензии за один запрос, а не три запроса за три претензии.
+func TestValidateCollectsAll(t *testing.T) {
+	a := valid()
+	a.Metadata.Name = "Bad_Name"
+	a.Spec.Tag = "latest"
+	a.Spec.Port = 99999
+
+	err := a.Validate()
+	if err == nil {
+		t.Fatal("ожидались ошибки на трёх сломанных полях")
+	}
+
+	var ves ValidationErrors
+	if !errors.As(err, &ves) {
+		t.Fatalf("ожидался ValidationErrors, получено %T", err)
+	}
+	if len(ves) != 3 {
+		t.Fatalf("ожидалось 3 ошибки, получено %d: %v", len(ves), ves)
+	}
+	for _, field := range []string{"metadata.name", "spec.tag", "spec.port"} {
+		if !hasField(ves, field) {
+			t.Fatalf("нет ошибки по полю %q, получено: %v", field, ves)
+		}
 	}
 }

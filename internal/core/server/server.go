@@ -30,10 +30,10 @@ func NewServer(config Config, log *core_logger.Logger, middleware ...core_transp
 	}
 }
 
-func (s *Server) RegisterRoutes(routers ...*Router) {
+func (s *Server) RegisterRoutes(version string, routers ...*Router) {
 	for _, router := range routers {
 		s.mux.Handle(
-			"/",
+			"/api"+version,
 			router,
 		)
 	}

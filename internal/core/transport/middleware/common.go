@@ -7,6 +7,7 @@ import (
 
 	core_logger "github.com/Eternity8c/deploy-platform/internal/core/logger"
 	core_transport_response "github.com/Eternity8c/deploy-platform/internal/core/transport/response"
+	"github.com/google/uuid"
 )
 
 const (
@@ -28,6 +29,27 @@ func Logger(log *core_logger.Logger) Middleware {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func RequestID() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestID := r.Header.Get(requestIDHeader)
+
+			if _, err := uuid.Parse(requestID); err != nil {
+				requestID = uuid.NewString()
+			}
+
+			r.Header.Set(requestIDHeader, requestID)
+			w.Header().Set(requestIDHeader, requestID)
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func RequestIDFromRequest(r *http.Request) string {
+	return r.Header.Get(requestIDHeader)
 }
 
 func Panic() Middleware {
