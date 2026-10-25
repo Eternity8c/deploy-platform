@@ -23,6 +23,16 @@ func nopLogger() *core_logger.Logger {
 	return &core_logger.Logger{Logger: zap.NewNop()}
 }
 
+// testRequestID — id, который в проде выставляет мидлварь RequestID.
+const testRequestID = "3f2a1c9e-1234-4000-8000-000000000000"
+
+func testRequest() *http.Request {
+	r := httptest.NewRequest(http.MethodPost, "/api/v1/applications", nil)
+	r.Header.Set("X-Request-ID", testRequestID)
+
+	return r
+}
+
 func TestWriteError(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -103,7 +113,7 @@ func TestWriteError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rec := httptest.NewRecorder()
 
-			writeError(nopLogger(), rec, tt.err)
+			writeError(nopLogger(), rec, testRequest(), tt.err)
 
 			if rec.Code != tt.wantStatus {
 				t.Fatalf("статус %d, ожидался %d", rec.Code, tt.wantStatus)
@@ -138,6 +148,10 @@ func TestWriteError(t *testing.T) {
 			if tt.wantFields > 0 && body.Detail.Fields[0].Field == "" {
 				t.Fatalf("поле пустое: %s", raw)
 			}
+			// Клиент должен видеть id, чтобы назвать его в поддержке/CI
+			if body.Detail.RequestID != testRequestID {
+				t.Fatalf("request_id %q, ожидался %q", body.Detail.RequestID, testRequestID)
+			}
 		})
 	}
 }
@@ -147,7 +161,7 @@ func TestWriteError(t *testing.T) {
 func TestWriteErrorUnknownFieldKeepsName(t *testing.T) {
 	rec := httptest.NewRecorder()
 
-	writeError(nopLogger(), rec, core_transport_request.Error{
+	writeError(nopLogger(), rec, testRequest(), core_transport_request.Error{
 		Class:   core_transport_request.UnknownFieldError,
 		Field:   "replicats",
 		Message: "field is not part of the schema",

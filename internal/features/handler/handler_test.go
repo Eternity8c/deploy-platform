@@ -116,6 +116,7 @@ func TestCreateApplication(t *testing.T) {
 
 			r := httptest.NewRequest(http.MethodPost, "/api/v1/applications", strings.NewReader(tt.body))
 			// хендлер берёт логгер из контекста и паникует без него
+			r.Header.Set("X-Request-ID", testRequestID)
 			r = r.WithContext(core_logger.WithLogger(r.Context(), nopLogger()))
 			rec := httptest.NewRecorder()
 
@@ -149,6 +150,9 @@ func TestCreateApplication(t *testing.T) {
 			if len(body.Detail.Fields) != tt.wantFields {
 				t.Fatalf("полей %d, ожидалось %d: %s", len(body.Detail.Fields), tt.wantFields, rec.Body.String())
 			}
+			if body.Detail.RequestID != testRequestID {
+				t.Fatalf("request_id %q, ожидался %q", body.Detail.RequestID, testRequestID)
+			}
 		})
 	}
 }
@@ -163,6 +167,7 @@ func TestCreateApplicationCreatedBody(t *testing.T) {
 	handler := NewApplicationHandler(store)
 
 	r := httptest.NewRequest(http.MethodPost, "/api/v1/applications", strings.NewReader(validManifest))
+	r.Header.Set("X-Request-ID", testRequestID)
 	r = r.WithContext(core_logger.WithLogger(r.Context(), nopLogger()))
 	rec := httptest.NewRecorder()
 
@@ -181,6 +186,10 @@ func TestCreateApplicationCreatedBody(t *testing.T) {
 	}
 	if _, ok := body["id"]; !ok {
 		t.Fatalf("в ответе нет id: %s", rec.Body.String())
+	}
+	// успешный ответ не должен тащить request_id в теле — он в заголовке
+	if _, ok := body["request_id"]; ok {
+		t.Fatalf("успешный ответ содержит request_id: %s", rec.Body.String())
 	}
 	// tenant не пришёл в запросе — значит проверяем, что дефолт домена доехал в store
 	if store.got.Spec.Tenant != "shop" {

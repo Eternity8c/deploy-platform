@@ -63,18 +63,18 @@ func (h *ApplicationHandler) CreateApplication(w http.ResponseWriter, r *http.Re
 
 	var app features_application.Application
 	if err := core_transport_request.Decode(r, &app); err != nil {
-		writeError(logger, w, err)
+		writeError(logger, w, r, err)
 		return
 	}
 
 	if err := app.Validate(); err != nil {
-		writeError(logger, w, err)
+		writeError(logger, w, r, err)
 		return
 	}
 
 	response, err := h.store.Create(ctx, app)
 	if err != nil {
-		writeError(logger, w, err)
+		writeError(logger, w, r, err)
 		return
 	}
 

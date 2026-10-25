@@ -39,6 +39,7 @@ func main() {
 	server := core_server.NewServer(
 		configServer,
 		logger,
+		core_transport_middleware.RequestID(),
 		core_transport_middleware.Logger(logger),
 		core_transport_middleware.Panic(),
 	)
@@ -52,19 +53,19 @@ func main() {
 	defer pool.Close()
 
 	store := features_application.NewStore(pool)
-	applicationhandler := features_handler.NewApplicationHandler(store)
+	applicationHandler := features_handler.NewApplicationHandler(store)
 
 	router := core_server.NewRouter()
 	router.RegisterRoutes(
 		core_server.Route{
 			Method:  http.MethodGet,
 			Path:    "/healthz",
-			Handler: applicationhandler.Healthz,
+			Handler: applicationHandler.Healthz,
 		},
 		core_server.Route{
 			Method:  http.MethodGet,
 			Path:    "/readyz",
-			Handler: applicationhandler.Readyz(pool),
+			Handler: applicationHandler.Readyz(pool),
 		},
 		core_server.Route{
 			Method:  http.MethodGet,
@@ -74,7 +75,7 @@ func main() {
 		core_server.Route{
 			Method:  http.MethodPost,
 			Path:    "/applications",
-			Handler: applicationhandler.CreateApplication,
+			Handler: applicationHandler.CreateApplication,
 		},
 	)
 
